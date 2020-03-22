@@ -9,7 +9,13 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    "incremental": true
+    "incremental": true,
+    "moduleResolution": "node",
+    "lib": ["esnext", "es5", "es6"],
+    "strict": true,
+    "preserveConstEnums": true,
+    "skipLibCheck": true,
+    "typeRoots": ["./node_modules/@types"]
   },
   "exclude": ["node_modules", "dist"]
 }
