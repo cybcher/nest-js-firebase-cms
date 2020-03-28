@@ -3,6 +3,9 @@ export type Config = {
     db: {
       mysql: credentialsMySQL
     }
+    auth: {
+      secret: string
+    }
   }
 }
 

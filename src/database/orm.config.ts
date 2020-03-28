@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { credentialsMySQL } from '../../config/types';
+import { credentialsMySQL } from '../config/types';
 
 export const DbConfig = ({
   host,
@@ -15,5 +15,6 @@ export const DbConfig = ({
   username: user,
   password,
   database,
-  entities: [join(__dirname, './**/*.entity{.ts,.js}')],
+  entities: [join(__dirname, '/../**/*.entity.{js,ts}')],
+  synchronize: true
 })

@@ -1,37 +1,54 @@
-import * as uuid from 'uuid/v1'
-import { Injectable } from '@nestjs/common'
-import { Product, ProductStatus } from './products.model'
-import { CreateProductDto } from './dto/create-product.dto'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+
+import { Product } from './product.entity'
+import { ProductStatus } from './product-status.enum'
+import { ProductRepository } from './product.repository'
+import { ProductCreateDto } from './dto/product.create.dto'
+import { GetProductsFilterDto } from './dto/get-products-filter.dto'
 
 @Injectable()
 export class ProductsService {
-  private products: Product[] = []
+  constructor(
+    @InjectRepository(ProductRepository)
+    private productRepository: ProductRepository,
+  ) {}
 
-  getProducts(): Product[] {
-    return this.products
+  async getProducts(
+    productsFilterDto: GetProductsFilterDto,
+  ): Promise<Product[]> {
+    return this.productRepository.getProducts(productsFilterDto)
   }
 
-  getProductById(id: string): Product | any {
-    return this.products.find(task => task.id === id)
-  }
+  async getProduct(id: number): Promise<Product> {
+    const result = await this.productRepository.findOne(id)
 
-  createProduct(createProductDto: CreateProductDto) {
-    const { title, description } = createProductDto
-    const product: Product = {
-      id: uuid(),
-      title,
-      description,
-      status: ProductStatus.ENABLED,
+    if (!result) {
+      throw new NotFoundException(`Product with id: '${id}' not found`)
     }
 
-    this.products.push(product)
-    return product
+    return result
   }
 
-  deleteProductById(id: string): boolean {
-    const productSizeBeforeOperation = this.products.length;
-    this.products = this.products.filter(task => task.id !== id);
+  async createProduct(createProductDto: ProductCreateDto): Promise<Product> {
+    return this.productRepository.createProduct(createProductDto)
+  }
 
-    return productSizeBeforeOperation !== this.products.length;
+  async deleteProduct(id: number): Promise<void> {
+    const result = await this.productRepository.delete(id)
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Product with id: '${id}' not found`)
+    }
+  }
+
+  async updateProductStatus(
+    id: number,
+    status: ProductStatus,
+  ): Promise<Product> {
+    const product = await this.getProduct(id)
+    product.status = status
+    await product.save()
+    return product
   }
 }

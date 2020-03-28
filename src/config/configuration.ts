@@ -1,10 +1,9 @@
 import { merge } from 'lodash'
 
-import { readConfig } from '../src/utils'
+import { readConfig } from '../utils'
 import { Config } from './types'
 
 const initialConfig: Config = readConfig('../../data/config.json')
-const credentials: Config = readConfig('../../data/credentials.json')
 const packageFile = readConfig('../../package.json')
 
 if (!process.env.NODE_ENV) {
@@ -33,5 +32,4 @@ const defaultConfig = {
   name: packageFile.name,
 }
 
-export default () =>
-  merge({}, defaultConfig, initialConfig[env], credentials[env])
+export default () => merge({}, defaultConfig, initialConfig[env])
