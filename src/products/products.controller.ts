@@ -1,28 +1,30 @@
 import {
-  Controller,
-  Query,
   Get,
   Post,
   Body,
+  Query,
   Param,
-  Delete,
   Patch,
+  Delete,
   UsePipes,
-  ValidationPipe,
+  UseGuards,
+  Controller,
   ParseIntPipe,
+  ValidationPipe,
 } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
+import { AuthGuard } from '@nestjs/passport';
 
 import { Product } from './product.entity'
 import { ProductsService } from './products.service'
 import { ProductStatus } from './product-status.enum'
 import { ProductCreateDto } from './dto/product.create.dto'
-import { ChangeProductStatusDto } from './dto/change-product-status.dto'
 import { GetProductsFilterDto } from './dto/get-products-filter.dto'
 import { ProductStatusValidationPipe } from './pipes/product-status-validation.pipe'
 
 @ApiTags('Products')
 @Controller('products')
+@UseGuards(AuthGuard())
 export class ProductsController {
   constructor(private productsService: ProductsService) {}
 

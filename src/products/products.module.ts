@@ -4,9 +4,13 @@ import { Module } from '@nestjs/common'
 import { ProductsService } from './products.service'
 import { ProductRepository } from './product.repository'
 import { ProductsController } from './products.controller'
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ProductRepository])],
+  imports: [
+    AuthModule,
+    TypeOrmModule.forFeature([ProductRepository])
+  ],
   controllers: [ProductsController],
   providers: [ProductsService],
 })
