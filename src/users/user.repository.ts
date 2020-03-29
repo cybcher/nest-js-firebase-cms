@@ -55,4 +55,8 @@ export class UserRepository extends Repository<User> {
   private async getAuthToken(phone: string, salt: string): Promise<string> {
     return bcrypt.hash(phone, salt)
   }
+
+  // async getUsersByContacts(): Promise<User[]> {
+
+  // }
 }

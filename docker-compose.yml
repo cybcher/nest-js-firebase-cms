@@ -1,22 +1,6 @@
 version: "3.7"
 
 services:
-  nest:
-    container_name: nest
-    build:
-      context: .
-      target: development
-    command: npm run start:dev
-    ports:
-      - ${KARAVANIUM_SERVER_PORT}:${KARAVANIUM_SERVER_PORT}
-      - 9229:9229
-    env_file:
-      - .env
-    networks: 
-      - karavanium-net
-    depends_on:
-      - mariadb
-
   mariadb:
     container_name: mariadb
     image: mariadb
@@ -32,6 +16,22 @@ services:
       MYSQL_PASSWORD: ${KARAVANIUM_DB_PASSWORD}
     networks: 
       - karavanium-net
+
+  nest:
+    container_name: nest
+    build:
+      context: .
+      target: development
+    command: npm run start:dev
+    ports:
+      - ${KARAVANIUM_SERVER_PORT}:${KARAVANIUM_SERVER_PORT}
+      - 9229:9229
+    env_file:
+      - .env
+    networks: 
+      - karavanium-net
+    depends_on:
+      - mariadb
 
 networks: 
   karavanium-net:
