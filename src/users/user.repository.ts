@@ -1,4 +1,4 @@
-import { ConflictException, InternalServerErrorException } from '@nestjs/common'
+import { ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { Repository, EntityRepository } from 'typeorm'
 import * as bcrypt from 'bcrypt'
 
@@ -29,7 +29,7 @@ export class UserRepository extends Repository<User> {
 
   async validateUserPhone(
     authCredentialsDto: AuthCredentialsDto,
-  ): Promise<string | any> {
+  ): Promise<User | any> {
     const { phone } = authCredentialsDto
     let user
     try {
@@ -46,7 +46,7 @@ export class UserRepository extends Repository<User> {
     }
 
     if (user && (await user.validatePhone(phone))) {
-      return user.phone
+      return user;
     }
 
     return null
@@ -56,7 +56,43 @@ export class UserRepository extends Repository<User> {
     return bcrypt.hash(phone, salt)
   }
 
-  // async getUsersByContacts(): Promise<User[]> {
+  async updateUserPushToken(id: number, params: any): Promise<void> {
+    const { pushToken } = params;
+    let user
+    try {
+      user = await this.findOne(id)
+    } catch (error) {
+      if (
+        error.errno === 1267 ||
+        error.code === 'ER_CANT_AGGREGATE_2COLLATIONS'
+      ) {
+        throw new ConflictException('Incorrect symbols in phone number')
+      }
 
-  // }
+      throw new InternalServerErrorException()
+    }
+
+    if (!user) {
+      throw new NotFoundException(`User with id: '${id}' not found`)
+    }
+
+    user.pushToken = pushToken
+    try {
+      await user.save()
+    } catch (error) {
+      throw new InternalServerErrorException()
+    }
+  }
+
+  async addToContacts(contactId: number, user: User): Promise<User> {
+    const contact = await this.findOne({id: contactId});
+    if (contact) {
+      user.contacting.push(
+        contact
+      );
+      await user.save()
+    }
+
+    return user;
+  }
 }

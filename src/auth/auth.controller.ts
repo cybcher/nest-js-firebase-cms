@@ -1,10 +1,11 @@
 import {
-  ValidationPipe,
-  Controller,
   Post,
   Body,
+  Controller,
+  ValidationPipe,
 } from '@nestjs/common'
 
+import { User } from '../users/user.entity';
 import { AuthService } from './auth.service'
 import { AuthCredentialsDto } from './dto/auth-credentials.dto'
 
@@ -15,14 +16,15 @@ export class AuthController {
   @Post('/signup')
   signUp(
     @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
-  ): Promise<void> {
-    return this.authService.signUp(authCredentialsDto)
+  ): Promise<{ accessToken: string; user: User }> {
+    this.authService.signUp(authCredentialsDto)
+    return this.authService.signIn(authCredentialsDto)
   }
 
   @Post('/signin')
   signIn(
     @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ accessToken: string; user: User }> {
     return this.authService.signIn(authCredentialsDto)
   }
 }

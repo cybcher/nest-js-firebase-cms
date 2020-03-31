@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt'
 
 import { UserRepository } from '../users/user.repository'
 import { AuthCredentialsDto } from './dto/auth-credentials.dto'
+import { User } from '../users/user.entity'
 
 @Injectable()
 export class AuthService {
@@ -19,18 +20,17 @@ export class AuthService {
 
   async signIn(
     authCredentialsDto: AuthCredentialsDto,
-  ): Promise<{ accessToken: string }> {
-    const phone = await this.userRepository.validateUserPhone(
-      authCredentialsDto,
-    )
+  ): Promise<{ accessToken: string; user: User }> {
+    const user = await this.userRepository.validateUserPhone(authCredentialsDto)
 
-    if (!phone) {
+    if (!user) {
       throw new UnauthorizedException('Invalid credentials')
     }
 
+    const { phone } = user
     const payload = { phone }
     const accessToken = await this.jwtService.sign(payload)
 
-    return { accessToken }
+    return { accessToken, user }
   }
 }
