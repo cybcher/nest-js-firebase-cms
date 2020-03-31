@@ -5,8 +5,23 @@ services:
     container_name: mariadb
     image: mariadb
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 250M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
     ports:
       - 3306:3306
+    volumes:
+       - db-data:/var/lib/mysql
     env_file:
       - .env
     environment:
@@ -26,6 +41,19 @@ services:
     volumes:
       - .:/usr/src/app/
       - /usr/src/app/node_modules
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 250M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
     ports:
       - ${KARAVANIUM_SERVER_PORT}:${KARAVANIUM_SERVER_PORT}
       - 9229:9229
@@ -39,3 +67,5 @@ services:
 networks: 
   karavanium-net:
    
+volumes:
+  db-data:
