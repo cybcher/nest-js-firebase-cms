@@ -2,6 +2,20 @@
     "development": {
         "db": {
             "mysql": {
+                "host": "127.0.0.1",
+                "port": 3306,
+                "user": "karavanium_user",
+                "password": "karavanium_password",
+                "database": "karavanium"
+            }
+        },
+        "auth" : {
+            "secret": "KaravaniumSuperDuperKey9000"
+        }
+    },
+    "production": {
+        "db": {
+            "mysql": {
                 "host": "mariadb",
                 "port": 3306,
                 "user": "karavanium_user",

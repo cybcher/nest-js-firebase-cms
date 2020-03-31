@@ -12,7 +12,7 @@ import {
   ParseIntPipe,
   ValidationPipe,
 } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { AuthGuard } from '@nestjs/passport';
 
 import { Product } from './product.entity'
@@ -23,6 +23,7 @@ import { GetProductsFilterDto } from './dto/get-products-filter.dto'
 import { ProductStatusValidationPipe } from './pipes/product-status-validation.pipe'
 
 @ApiTags('Products')
+// @ApiBearerAuth()
 @Controller('products')
 @UseGuards(AuthGuard())
 export class ProductsController {

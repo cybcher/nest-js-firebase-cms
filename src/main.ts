@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+// import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as readPkg  from 'read-pkg-up';
+// import * as readPkg  from 'read-pkg-up';
 
 import { AppModule } from './app.module';
 
@@ -16,12 +16,14 @@ async function bootstrap() {
   //   }),
   // )
 
-  const pkg = await readPkg()
+  // const pkg = await readPkg()
 
   const options = new DocumentBuilder()
-    .setTitle(pkg!.packageJson.name)
-    .setVersion(pkg!.packageJson.version)
-    .setDescription(pkg!.packageJson.description || '')
+    // .addBasicAuth()
+    .setTitle("Karavanium Application")
+    .setDescription('Karavanium Application')
+    .setVersion("0.0.1")
+    .addTag('API')
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
