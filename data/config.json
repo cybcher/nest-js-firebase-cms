@@ -2,7 +2,7 @@
     "development": {
         "db": {
             "mysql": {
-                "host": "127.0.0.1",
+                "host": "mariadb",
                 "port": 3306,
                 "user": "karavanium_user",
                 "password": "karavanium_password",
