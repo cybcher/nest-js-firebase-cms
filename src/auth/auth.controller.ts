@@ -8,6 +8,7 @@ import {
 
 import { AuthService } from './auth.service'
 import { AuthSignInResponse } from './auth.signin.response'
+import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 
 @ApiTags('Authorization')
 @Controller('auth')
@@ -24,8 +25,8 @@ export class AuthController {
   })
   @ApiConflictResponse({ description: 'Incorrect symbols in phone number. ' })
   signIn(
-    @Body('uuid', ValidationPipe) userUUID: string,
+    @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto
   ): Promise<AuthSignInResponse> {
-    return this.authService.signIn(userUUID)
+    return this.authService.signIn(authCredentialsDto)
   }
 }
