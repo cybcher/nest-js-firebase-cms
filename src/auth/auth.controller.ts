@@ -7,27 +7,12 @@ import {
 } from '@nestjs/swagger'
 
 import { AuthService } from './auth.service'
-import { AuthCredentialsDto } from './dto/auth-credentials.dto'
 import { AuthSignInResponse } from './auth.signin.response'
 
 @ApiTags('Authorization')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
-
-  @Post('/signup')
-  @ApiCreatedResponse({
-    description: 'Created. The user has been successfully created. ',
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Unauthorized. Invalid credentials. ',
-  })
-  @ApiConflictResponse({ description: 'Incorrect symbols in phone number. ' })
-  signUp(
-    @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
-  ): Promise<void> {
-    return this.authService.signUp(authCredentialsDto)
-  }
 
   @Post('/signin')
   @ApiCreatedResponse({
@@ -37,9 +22,10 @@ export class AuthController {
   @ApiUnauthorizedResponse({
     description: 'Unauthorized. Invalid credentials. ',
   })
+  @ApiConflictResponse({ description: 'Incorrect symbols in phone number. ' })
   signIn(
-    @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto,
+    @Body('uuid', ValidationPipe) userUUID: string,
   ): Promise<AuthSignInResponse> {
-    return this.authService.signIn(authCredentialsDto)
+    return this.authService.signIn(userUUID)
   }
 }

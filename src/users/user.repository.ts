@@ -3,12 +3,10 @@ import { Repository, EntityRepository } from 'typeorm'
 import * as bcrypt from 'bcrypt'
 
 import { User } from './user.entity'
-import { AuthCredentialsDto } from '../auth/dto/auth-credentials.dto'
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
-  async signUp(authCredentialsDto: AuthCredentialsDto): Promise<void> {
-    const { phone } = authCredentialsDto
+  async createUser(phone: string): Promise<User> {
     const salt = await bcrypt.genSalt()
 
     const user = new User()
@@ -18,6 +16,7 @@ export class UserRepository extends Repository<User> {
 
     try {
       await user.save()
+      return user
     } catch (error) {
       if (error.errno === 1062 || error.code === 'ER_DUP_ENTRY') {
         throw new ConflictException('Phone already exists')
@@ -27,10 +26,9 @@ export class UserRepository extends Repository<User> {
     }
   }
 
-  async validateUserPhone(
-    authCredentialsDto: AuthCredentialsDto,
+  async checkIfUserExists(
+    phone: string,
   ): Promise<User | any> {
-    const { phone } = authCredentialsDto
     let user
     try {
       user = await this.findOne({ phone })

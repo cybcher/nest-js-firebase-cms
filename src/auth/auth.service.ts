@@ -1,6 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
 import { JwtService } from '@nestjs/jwt'
+import * as admin from 'firebase-admin'
 
 import { UserRepository } from '../users/user.repository'
 import { AuthCredentialsDto } from './dto/auth-credentials.dto'
@@ -14,23 +15,38 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signUp(authCredentialsDto: AuthCredentialsDto): Promise<void> {
-    return this.userRepository.signUp(authCredentialsDto)
-  }
-
   async signIn(
-    authCredentialsDto: AuthCredentialsDto,
+    userUUID: string,
   ): Promise<{ accessToken: string; user: User }> {
-    const user = await this.userRepository.validateUserPhone(authCredentialsDto)
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials')
-    }
-
+    const user = await this.firebaseSignIn(userUUID) 
     const { phone } = user
     const payload = { phone }
     const accessToken = await this.jwtService.sign(payload)
 
     return { accessToken, user }
+  }
+
+  async firebaseSignIn(
+    userUUID: string,
+  ): Promise<User> {
+    let firebaseUser;
+    try {
+      firebaseUser = await admin.auth().getUser(userUUID)
+
+      const firebaseUserPhone = firebaseUser.phoneNumber;
+      if (!firebaseUserPhone) {
+        throw new ConflictException("User phone not exists in firebase database")
+      }
+
+      let user = await this.userRepository.checkIfUserExists(firebaseUserPhone);
+      if (!user) {
+        user = this.userRepository.createUser(firebaseUserPhone)
+      }
+
+      return user;
+      // if we find user and no user in database, then save user and response with jwt token
+    } catch (error) {
+      throw new ConflictException(error.errorInfo.message)
+    }
   }
 }
