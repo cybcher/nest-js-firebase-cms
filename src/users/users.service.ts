@@ -14,7 +14,7 @@ export class UsersService {
     return this.userRepository.updateUserPushToken(id, params)
   }
 
-  addToContacts(contactId: number, user: User): Promise<User> {
-    return this.userRepository.addToContacts(contactId, user)
+  checkContacts(contacts: string[], user: User): Promise<User> {
+    return this.userRepository.checkContacts(contacts, user)
   }
 }

@@ -7,7 +7,9 @@ import {
   PrimaryGeneratedColumn,
   Unique,
   ManyToMany,
-  JoinTable
+  JoinTable,
+  RelationCount,
+  JoinColumn
 } from 'typeorm'
 import * as bcrypt from 'bcrypt'
 import { ApiProperty } from '@nestjs/swagger'
@@ -67,14 +69,20 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updated!: Date
 
-  @ApiProperty({ type: [User] })
+  // @ApiProperty({ type: [User] })
   @ManyToMany(type => User, user => user.contacting)
   @JoinTable()
   contacts: User[]
 
-  @ApiProperty({ type: [User] })
+  // @ApiProperty({ type: [User] })
   @ManyToMany(type => User, user => user.contacts)
   contacting: User[];
+
+  @RelationCount((user: User) => user.contacts)
+  contactsCount: number;
+  
+  @RelationCount((user: User) => user.contacting)
+  contactingCount: number;
 
   async validatePhone(phone: string): Promise<boolean> {
     const hash = await bcrypt.hash(phone, this.salt)

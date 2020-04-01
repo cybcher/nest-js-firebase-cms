@@ -20,11 +20,11 @@ export class UsersController {
     return this.userService.updateUserPushToken(user.id, { pushToken })
   }
 
-  @Post('addcontact')
+  @Post('contacts')
   addToContacts(
     @GetUser() user: User,
-    @Body('contact_id') contactId: number,
+    @Body('contacts') contacts: string[],
   ): Promise<User> {
-    return this.userService.addToContacts(contactId, user);
+    return this.userService.checkContacts(contacts, user);
   }
 }

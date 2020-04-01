@@ -1,4 +1,8 @@
-import { ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'
 import { Repository, EntityRepository } from 'typeorm'
 import * as bcrypt from 'bcrypt'
 
@@ -6,7 +10,7 @@ import { User } from './user.entity'
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
-  async createUser(phone: string): Promise<User> {
+  async createUser(phone: string): Promise<User | any> {
     const salt = await bcrypt.genSalt()
 
     const user = new User()
@@ -16,6 +20,7 @@ export class UserRepository extends Repository<User> {
 
     try {
       await user.save()
+      const fullUser = await this.getUserById(user.id)
       return user
     } catch (error) {
       if (error.errno === 1062 || error.code === 'ER_DUP_ENTRY') {
@@ -26,9 +31,7 @@ export class UserRepository extends Repository<User> {
     }
   }
 
-  async checkIfUserExists(
-    phone: string,
-  ): Promise<User | any> {
+  async checkIfUserExists(phone: string): Promise<User | any> {
     let user
     try {
       user = await this.findOne({ phone })
@@ -44,7 +47,8 @@ export class UserRepository extends Repository<User> {
     }
 
     if (user && (await user.validatePhone(phone))) {
-      return user;
+      const fullUser = await this.getUserById(user.id)
+      return fullUser
     }
 
     return null
@@ -55,7 +59,7 @@ export class UserRepository extends Repository<User> {
   }
 
   async updateUserPushToken(id: number, params: any): Promise<void> {
-    const { pushToken } = params;
+    const { pushToken } = params
     let user
     try {
       user = await this.findOne(id)
@@ -82,15 +86,32 @@ export class UserRepository extends Repository<User> {
     }
   }
 
-  async addToContacts(contactId: number, user: User): Promise<User> {
-    const contact = await this.findOne({id: contactId});
-    if (contact) {
-      user.contacting.push(
-        contact
-      );
-      await user.save()
+  async getUserById(id: number): Promise<User | undefined> {
+    const user = await this.findOne(id, {
+      relations: ['contacts', 'contacting'],
+    })
+
+    return user
+  }
+
+  async checkContacts(contacts: string[], user: User): Promise<any> {
+    const fullUser = await this.getUserById(user.id)
+    if (!fullUser) {
+      throw new InternalServerErrorException('User with such id not found')
     }
 
-    return user;
+    // eslint-disable-next-line no-restricted-syntax
+    for (let phone of contacts) {
+      // eslint-disable-next-line no-await-in-loop
+      let contact = await this.findOne({ phone })
+      if (contact) {
+        fullUser.contacts.push(contact)
+      }
+    }
+
+    await fullUser.save()
+    const savedUser = await this.getUserById(user.id)
+
+    return savedUser
   }
 }
