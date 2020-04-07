@@ -10,11 +10,15 @@ export class UsersService {
     private userRepository: UserRepository,
   ) {}
 
-  updateUserPushToken(id: number, params: any): Promise<void> {
-    return this.userRepository.updateUserPushToken(id, params)
+  addUserDevice(id: number, params: any): Promise<void> {
+    return this.userRepository.addUserDevice(id, params)
   }
 
-  checkContacts(contacts: string[], user: User): Promise<User> {
-    return this.userRepository.checkContacts(contacts, user)
+  checkAndSaveUserContacts(contacts: string[], user: User): Promise<User> {
+    return this.userRepository.checkAndSaveUserContacts(contacts, user)
+  }
+
+  getUserDevices(user: User): Promise<User> {
+    return this.userRepository.getUserDevices(user)
   }
 }

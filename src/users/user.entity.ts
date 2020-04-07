@@ -1,19 +1,23 @@
 import {
   Entity,
   Column,
+  Unique,
+  OneToMany,
+  JoinTable,
   BaseEntity,
+  ManyToMany,
+  RelationCount,
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
-  Unique,
-  ManyToMany,
-  JoinTable,
-  RelationCount,
-  JoinColumn
 } from 'typeorm'
 import * as bcrypt from 'bcrypt'
+import { IsEmail } from 'class-validator'
+import { Exclude } from 'class-transformer'
 import { ApiProperty } from '@nestjs/swagger'
 
+import { Device } from '../devices/device.entity'
+import { Thread } from '../threads/thread.entity'
 import { UserRole } from './user-role.enum'
 
 @Entity('users')
@@ -38,6 +42,7 @@ export class User extends BaseEntity {
 
   @ApiProperty({ type: String })
   @Column({ type: 'varchar', length: 255, nullable: true })
+  @IsEmail()
   email!: string
 
   @ApiProperty({ type: String })
@@ -52,13 +57,12 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 150, nullable: true })
   lastName!: string
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  pushToken!: string
-  
   @Column({ type: 'varchar', length: 255, nullable: false })
+  @Exclude()
   salt: string
 
   @Column({ type: 'varchar', length: 255, nullable: false })
+  @Exclude()
   authToken: string
 
   @ApiProperty({ type: Date })
@@ -69,20 +73,50 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updated!: Date
 
-  // @ApiProperty({ type: [User] })
-  @ManyToMany(type => User, user => user.contacting)
+  @ApiProperty({ type: [User] })
+  @ManyToMany(
+    type => User,
+    user => user.contacting,
+  )
   @JoinTable()
   contacts: User[]
 
-  // @ApiProperty({ type: [User] })
-  @ManyToMany(type => User, user => user.contacts)
-  contacting: User[];
+  @ApiProperty({ type: [User] })
+  @ManyToMany(
+    type => User,
+    user => user.contacts,
+  )
+  contacting: User[]
 
+  @OneToMany(
+    type => Device,
+    device => device.user,
+    { cascade: ['insert', 'update'] },
+  )
+  devices: Device[]
+
+  @OneToMany(
+    type => Thread,
+    thread => thread.sender,
+    { cascade: ['insert', 'update'] },
+  )
+  threads: Thread[]
+
+  @Exclude()
   @RelationCount((user: User) => user.contacts)
-  contactsCount: number;
-  
+  contactsCount: number
+
+  @Exclude()
   @RelationCount((user: User) => user.contacting)
-  contactingCount: number;
+  contactingCount: number
+
+  @Exclude()
+  @RelationCount((user: User) => user.devices)
+  devicesCount: number
+
+  @Exclude()
+  @RelationCount((user: User) => user.threads)
+  threadCount: number
 
   async validatePhone(phone: string): Promise<boolean> {
     const hash = await bcrypt.hash(phone, this.salt)

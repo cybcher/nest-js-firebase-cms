@@ -1,6 +1,10 @@
 import { existsSync, readFileSync } from 'fs'
 import { resolve } from 'path'
 
+export const THREADS  = 'threads';
+
+export const MESSAGES  = 'messages';
+
 export const readJsonFile = (path: string) => {
   return JSON.parse(readFileSync(resolve(__dirname, path)).toString('utf8'))
 }

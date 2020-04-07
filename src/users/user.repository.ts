@@ -7,6 +7,7 @@ import { Repository, EntityRepository } from 'typeorm'
 import * as bcrypt from 'bcrypt'
 
 import { User } from './user.entity'
+import { Device } from '../devices/device.entity';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -20,7 +21,7 @@ export class UserRepository extends Repository<User> {
 
     try {
       await user.save()
-      const fullUser = await this.getUserById(user.id)
+      const fullUser = await this.getUserWithContacts(user.id)
       return user
     } catch (error) {
       if (error.errno === 1062 || error.code === 'ER_DUP_ENTRY') {
@@ -31,7 +32,7 @@ export class UserRepository extends Repository<User> {
     }
   }
 
-  async checkIfUserExists(phone: string): Promise<User | any> {
+  async getUserByPhone(phone: string): Promise<User | any> {
     let user
     try {
       user = await this.findOne({ phone })
@@ -47,7 +48,7 @@ export class UserRepository extends Repository<User> {
     }
 
     if (user && (await user.validatePhone(phone))) {
-      const fullUser = await this.getUserById(user.id)
+      const fullUser = await this.getUserWithContacts(user.id)
       return fullUser
     }
 
@@ -58,11 +59,11 @@ export class UserRepository extends Repository<User> {
     return bcrypt.hash(phone, salt)
   }
 
-  async updateUserPushToken(id: number, params: any): Promise<void> {
-    const { pushToken } = params
+  async addUserDevice(id: number, params: any): Promise<void> {
+    const { token } = params
     let user
     try {
-      user = await this.findOne(id)
+      user = await this.findOne(id, {relations: ['devices']})
     } catch (error) {
       if (
         error.errno === 1267 ||
@@ -78,7 +79,10 @@ export class UserRepository extends Repository<User> {
       throw new NotFoundException(`User with id: '${id}' not found`)
     }
 
-    user.pushToken = pushToken
+    const device = new Device()
+    device.token = token
+    user.devices.push(device)
+    
     try {
       await user.save()
     } catch (error) {
@@ -87,7 +91,7 @@ export class UserRepository extends Repository<User> {
   }
 
   async updateUserAvatar(id: number, params: any): Promise<void> {
-    const { pushToken } = params
+    const { token } = params
     let user
     try {
       user = await this.findOne(id)
@@ -106,7 +110,7 @@ export class UserRepository extends Repository<User> {
       throw new NotFoundException(`User with id: '${id}' not found`)
     }
 
-    user.pushToken = pushToken
+    // user.pushToken = pushToken
     try {
       await user.save()
     } catch (error) {
@@ -114,16 +118,8 @@ export class UserRepository extends Repository<User> {
     }
   }
 
-  async getUserById(id: number): Promise<User | undefined> {
-    const user = await this.findOne(id, {
-      relations: ['contacts', 'contacting'],
-    })
-
-    return user
-  }
-
-  async checkContacts(contacts: string[], user: User): Promise<any> {
-    const fullUser = await this.getUserById(user.id)
+  async checkAndSaveUserContacts(contacts: string[], user: User): Promise<any> {
+    const fullUser = await this.getUserWithContacts(user.id)
     if (!fullUser) {
       throw new InternalServerErrorException('User with such id not found')
     }
@@ -138,8 +134,51 @@ export class UserRepository extends Repository<User> {
     }
 
     await fullUser.save()
-    const savedUser = await this.getUserById(user.id)
+    const savedUser = await this.getUserWithContacts(user.id)
 
     return savedUser
+  }
+
+  async getUserDevices(user: User): Promise<any> {
+    const userWithDevices = await this.getUserWithDevices(user.id)
+    if (!userWithDevices) {
+      throw new InternalServerErrorException('User with such id not found')
+    }
+
+    return userWithDevices;
+  }
+
+  async getActiveUserDeviceToken(user: User): Promise<any> {
+    const userWithDevices = await this.getUserWithDevices(user.id)
+    if (!userWithDevices) {
+      throw new InternalServerErrorException('User with such id not found')
+    }
+    const lastDevice = userWithDevices.devicesCount - 1
+    const lastDeviceToken = userWithDevices.devices[lastDevice].token
+    return lastDeviceToken;
+  }
+
+  async getUserWithContacts(id: number): Promise<User | undefined> {
+    const user = await this.findOne(id, {
+      relations: ['contacts'],
+    })
+
+    return user
+  }
+
+  async getUserWithContacting(id: number): Promise<User | undefined> {
+    const user = await this.findOne(id, {
+      relations: ['contacting'],
+    })
+
+    return user
+  }
+
+  async getUserWithDevices(id: number): Promise<User | undefined> {
+    const user = await this.findOne(id, {
+      relations: ['devices'],
+    })
+
+    return user
   }
 }

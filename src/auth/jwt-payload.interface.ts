@@ -1,3 +1,5 @@
 export interface JwtPayload {
-    phone: string;
+    readonly sub: string;
+    readonly iat: number;
+    readonly exp: number;
 }

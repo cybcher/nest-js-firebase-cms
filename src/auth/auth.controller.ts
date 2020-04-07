@@ -1,4 +1,4 @@
-import { Post, Body, Controller, ValidationPipe } from '@nestjs/common'
+import { Post, Body, Controller, ValidationPipe, ClassSerializerInterceptor, UseInterceptors } from '@nestjs/common';
 import {
   ApiCreatedResponse,
   ApiUnauthorizedResponse,
@@ -24,6 +24,7 @@ export class AuthController {
     description: 'Unauthorized. Invalid credentials. ',
   })
   @ApiConflictResponse({ description: 'Incorrect symbols in phone number. ' })
+  @UseInterceptors(ClassSerializerInterceptor)
   signIn(
     @Body(ValidationPipe) authCredentialsDto: AuthCredentialsDto
   ): Promise<AuthSignInResponse> {

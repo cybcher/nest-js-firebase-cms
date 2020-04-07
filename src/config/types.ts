@@ -6,6 +6,12 @@ export type Config = {
     auth: {
       secret: string
     }
+    firebase: {
+      projectId: string,
+      privateKey: string,
+      clientEmail: string,
+      databaseURL: string,
+    }
   }
 }
 

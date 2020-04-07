@@ -10,6 +10,7 @@ import * as admin from 'firebase-admin'
 import { UserRepository } from '../users/user.repository'
 import { AuthCredentialsDto } from './dto/auth-credentials.dto'
 import { User } from '../users/user.entity'
+import { AuthSignInResponse } from './auth.signin.response';
 
 @Injectable()
 export class AuthService {
@@ -19,18 +20,14 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signIn(
-    authCredentialsDto: AuthCredentialsDto,
-  ): Promise<{ accessToken: string; user: User }> {
-    const user = await this.firebaseSignIn(authCredentialsDto)
+  async getToken(user: User): Promise<string>{
     const { phone } = user
     const payload = { phone }
     const accessToken = await this.jwtService.sign(payload)
-
-    return { accessToken, user }
+    return accessToken;
   }
 
-  async firebaseSignIn(authCredentialsDto: AuthCredentialsDto): Promise<User> {
+  async signIn(authCredentialsDto: AuthCredentialsDto): Promise<AuthSignInResponse> {
     const { uuid } = authCredentialsDto
     let firebaseUser
     try {
@@ -43,12 +40,14 @@ export class AuthService {
         )
       }
 
-      let user = await this.userRepository.checkIfUserExists(firebaseUserPhone)
+      let user = await this.userRepository.getUserByPhone(firebaseUserPhone)
       if (!user) {
         user = this.userRepository.createUser(firebaseUserPhone)
       }
 
-      return user
+      const accessToken = await this.getToken(user)
+      const newObject: AuthSignInResponse = { accessToken, user }
+      return newObject;
       // if we find user and no user in database, then save user and response with jwt token
     } catch (error) {
       throw new ConflictException(error.errorInfo.message)

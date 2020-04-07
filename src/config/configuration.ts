@@ -3,8 +3,8 @@ import { merge } from 'lodash'
 import { readConfig } from '../utils'
 import { Config } from './types'
 
-const initialConfig: Config = readConfig('../../data/config.json')
-const packageFile = readConfig('../../package.json')
+const initialConfig: Config = readConfig('../../../data/config.json')
+const packageFile = readConfig('../../../package.json')
 
 if (!process.env.NODE_ENV) {
   throw Error('Process environment is required!')
