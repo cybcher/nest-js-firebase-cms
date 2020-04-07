@@ -21,7 +21,7 @@ export class ThreadsController {
     })
     @ApiParam({ name: 'receiverId', type: Number, description: 'User ID that should receive your message', example: 1})
     @Post()
-    createThread(@GetUser() sender: User, @Body('receiverId') receiverId: number): Promise<any> {
+    createThread(@GetUser() sender: User, @Body('receiver_id') receiverId: number): Promise<any> {
         return this.threadService.createThread(sender, receiverId)
     }
 
