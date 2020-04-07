@@ -19,7 +19,7 @@ export class ThreadsController {
         description: 'Created. The thread has been successfully created. ',
         type: Thread
     })
-    @ApiParam({ name: 'receiverId', type: Number, description: 'User ID that should receive your message', example: 1})
+    @ApiParam({ name: 'receiver_id', type: Number, description: 'User ID that should receive your message', example: 1})
     @Post()
     createThread(@GetUser() sender: User, @Body('receiver_id') receiverId: number): Promise<any> {
         return this.threadService.createThread(sender, receiverId)
@@ -28,16 +28,16 @@ export class ThreadsController {
     @ApiCreatedResponse({
         description: 'Get all thread messages',
     })
-    @Get('messages/:threadId')
-    getMessage(@GetUser() sender: User, @Param('threadId') threadId: number): Promise<any> {
+    @Get(':thread_id/messages')
+    getMessage(@GetUser() sender: User, @Param('thread_id') threadId: number): Promise<any> {
         return this.threadService.getMessages(threadId)
     }
 
     @ApiCreatedResponse({
         description: 'Add new message',
     })
-    @Post('messages')
-    addMessage(@GetUser() sender: User, @Body() messageBody: any): Promise<any> {
-        return this.threadService.addMessage(messageBody.threadId, messageBody.value)
+    @Post(':thread_id/messages')
+    addMessage(@GetUser() sender: User, @Param('thread_id') threadId: number, @Body() messageBody: any): Promise<any> {
+        return this.threadService.addMessage(threadId, messageBody.value)
     }
 }
