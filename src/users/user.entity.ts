@@ -16,9 +16,9 @@ import { IsEmail } from 'class-validator'
 import { Exclude } from 'class-transformer'
 import { ApiProperty } from '@nestjs/swagger'
 
+import { UserRole } from './user-role.enum'
 import { Device } from '../devices/device.entity'
 import { Thread } from '../threads/thread.entity'
-import { UserRole } from './user-role.enum'
 
 @Entity('users')
 @Unique(['phone'])

@@ -6,7 +6,6 @@ import { AuthModule } from '../auth/auth.module';
 import { UserRepository } from './user.repository';
 import { UsersController } from './users.controller';
 import { ThreadsService } from '../threads/threads.service';
-import { ThreadsModule } from '../threads/threads.module';
 import { ThreadRepository } from '../threads/thread.repository';
 
 @Module({
