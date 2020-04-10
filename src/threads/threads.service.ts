@@ -11,6 +11,7 @@ import { Message } from '../messages/message.entity'
 import { ThreadRepository } from './thread.repository'
 import { UserRepository } from '../users/user.repository'
 import { MessageRepository } from '../messages/message.repository'
+import { MessageType } from '../messages/message-type.enum'
 
 @Injectable()
 export class ThreadsService {
@@ -23,8 +24,13 @@ export class ThreadsService {
 
   private messageLimit = 20
 
-  async addMessage(threadId: number, messageValue: string): Promise<any> {
+  async addMessage(
+    threadId: number,
+    messageType: MessageType,
+    messageValue: string,
+  ): Promise<any> {
     const message = new Message()
+    message.type = messageType
     message.value = messageValue
     const thread = await this.threadRepository.findThreadWithSenderAndReceiver(
       threadId,
@@ -58,6 +64,7 @@ export class ThreadsService {
     receiverId: number,
     lastMessageId: number,
     haveMessages: boolean,
+    loadMessages: boolean,
     type: ThreadType = ThreadType.REGULAR,
   ): Promise<any> {
     const receiverUser = await this.userRepository.findOne(receiverId)
@@ -68,7 +75,7 @@ export class ThreadsService {
     }
 
     let thread: any
-    if (haveMessages && lastMessageId > 0) {
+    if ((loadMessages || haveMessages) && lastMessageId > 0) {
       const messageExists = await this.messageRepository.findOne(
         lastMessageId,
         {
@@ -84,7 +91,8 @@ export class ThreadsService {
         messageExists.thread.id,
         type,
         lastMessageId,
-        this.messageLimit,
+        loadMessages,
+        loadMessages ? 0 : this.messageLimit,
       )
     }
 
@@ -107,7 +115,7 @@ export class ThreadsService {
 
       thread = await this.threadRepository.findThreadWithMessages(
         threadExist.id,
-        this.messageLimit,
+        loadMessages ? 0 : this.messageLimit,
       )
     }
 

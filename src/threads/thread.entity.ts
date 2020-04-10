@@ -12,9 +12,9 @@ import {
 } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 
-import { User } from '../users/user.entity'
 import { ThreadType } from './thread-type.enum'
 import { ThreadStatus } from './thread-status.enum'
+import { User } from '../users/user.entity'
 import { Message } from '../messages/message.entity'
 
 @Entity('threads')
@@ -42,18 +42,21 @@ export class Thread extends BaseEntity {
   })
   status: ThreadStatus
 
+  @ApiProperty({ type: () => User })
   @ManyToOne(
     type => User,
     sender => sender.threads,
   )
   sender: User
 
+  @ApiProperty({ type: () => User })
   @ManyToOne(
     type => User,
     receiver => receiver.threads,
   )
   receiver: User
 
+  @ApiProperty({ type: [() => Message]})
   @OneToMany(
     type => Message,
     message => message.thread,

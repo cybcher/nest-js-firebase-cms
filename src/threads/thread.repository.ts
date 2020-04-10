@@ -161,21 +161,32 @@ export class ThreadRepository extends Repository<Thread> {
     id: number,
     type: ThreadType,
     lastMessageId: number,
+    order: boolean,
     limit: number,
   ): Promise<any> {
-    const response = await this.createQueryBuilder('threads')
+    const query = this.createQueryBuilder('threads')
       .leftJoinAndSelect('threads.sender', 'sender')
       .leftJoinAndSelect('threads.receiver', 'receiver')
       .leftJoinAndSelect(
         'threads.messages',
         'messages',
-        'messages.threadId = threads.id AND messages.id > :last_message_id',
+        'messages.threadId = threads.id',
       )
-      .where('threads.id = :id AND threads.type = :type')
+      .where('threads.id = :id')
+      .andWhere('threads.type = :type');
+      
+    if (order) {
+      query.andWhere('messages.id > :last_message_id')
+    } else {
+      query.andWhere('messages.id < :last_message_id')
+    }
+
+    const response = await query
       .orderBy('messages.id', 'DESC')
       .limit(limit)
       .setParameter('id', id)
       .setParameter('type', type)
+      .setParameter('order', "<")
       .setParameter('last_message_id', lastMessageId)
       .getMany()
 
