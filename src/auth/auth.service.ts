@@ -41,7 +41,7 @@ export class AuthService {
 
       let user = await this.userRepository.getUserByPhone(firebaseUserPhone)
       if (!user) {
-        user = this.userRepository.createUser(firebaseUserPhone)
+        user = await this.userRepository.createUser(firebaseUserPhone)
       }
 
       const accessToken = await this.getToken(user)

@@ -8,6 +8,7 @@ import { ThreadRepository } from './thread.repository';
 import { ThreadsController } from './threads.controller';
 import { MessagesService } from '../messages/messages.service';
 import { UserRepository } from '../users/user.repository';
+import { MessageRepository } from '../messages/message.repository';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { UserRepository } from '../users/user.repository';
     TypeOrmModule.forFeature([
       ThreadRepository,
       UserRepository,
+      MessageRepository
     ])
   ],
   controllers: [ThreadsController],

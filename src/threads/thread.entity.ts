@@ -1,31 +1,37 @@
 import {
   Entity,
   Column,
+  Unique,
   OneToMany,
+  ManyToOne,
   BaseEntity,
   RelationCount,
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
-  ManyToOne,
-  Unique,
 } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 
 import { User } from '../users/user.entity'
+import { ThreadType } from './thread-type.enum'
 import { ThreadStatus } from './thread-status.enum'
 import { Message } from '../messages/message.entity'
 
 @Entity('threads')
-@Unique(['firebaseDocId'])
+@Unique(['sender', 'receiver', 'type'])
 export class Thread extends BaseEntity {
   @ApiProperty({ type: Number })
   @PrimaryGeneratedColumn()
   id: number
 
-  @ApiProperty({ type: String })
-  @Column({ type: 'varchar', length: 150, nullable: false })
-  firebaseDocId: string
+  @ApiProperty({ enum: ThreadType, default: ThreadType.REGULAR })
+  @Column({
+    type: 'enum',
+    enum: ThreadType,
+    nullable: false,
+    default: ThreadType.REGULAR,
+  })
+  type: ThreadType
 
   @ApiProperty({ enum: ThreadStatus, default: ThreadStatus.ACTIVE })
   @Column({

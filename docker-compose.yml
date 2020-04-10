@@ -20,8 +20,6 @@ services:
         window: 120s
     ports:
       - 3306:3306
-    volumes:
-       - db-data:/var/lib/mysql
     env_file:
       - .env
     environment:
@@ -66,6 +64,3 @@ services:
 
 networks: 
   karavanium-net:
-   
-volumes:
-  db-data:

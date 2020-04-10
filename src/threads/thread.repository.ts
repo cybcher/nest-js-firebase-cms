@@ -10,6 +10,7 @@ import { Thread } from './thread.entity'
 import { User } from '../users/user.entity'
 import { THREADS, MESSAGES } from '../utils'
 import { Message } from '../messages/message.entity'
+import { ThreadType } from './thread-type.enum'
 
 @EntityRepository(Thread)
 export class ThreadRepository extends Repository<Thread> {
@@ -17,21 +18,43 @@ export class ThreadRepository extends Repository<Thread> {
 
   // todo: try to refactore firestore logic
 
-  async createThread(sender: User, receiver: User): Promise<Thread> {
+  async createThread(
+    sender: User,
+    receiver: User,
+    type: ThreadType = ThreadType.REGULAR,
+  ): Promise<Thread | any> {
     const thread = new Thread()
 
-    thread.firebaseDocId = `${sender.id}_${receiver.id}`
     thread.sender = sender
     thread.receiver = receiver
+    thread.type = type
+    try {
+      const savedThread = await thread.save()
 
-    const savedThread = await thread.save()
-    await this.createFireStoreThread(savedThread, sender.id, receiver.id)
+      const loadedThread = this.findFullThread(savedThread.id)
 
-    const threadWith = this.findThreadWithSenderAndReceiver(savedThread.id)
-    return threadWith
+      return loadedThread
+    } catch (error) {
+      if (error.errno === 1062 || error.code === 'ER_DUP_ENTRY') {
+        const errorThread = await this.findThreadByType(sender, receiver)
+        return errorThread
+      }
+
+      if (error.errno === 1265 || error.code === 'WARN_DATA_TRUNCATED') {
+        const errorThread = await this.createThread(sender, receiver)
+        return errorThread
+      }
+
+      throw new InternalServerErrorException()
+    }
   }
 
-  async addMessage(threadId: number, message: Message, token: string): Promise<any> {
+  async addMessage(
+    threadId: number,
+    message: Message,
+    tokens: string[],
+    limit: number,
+  ): Promise<any> {
     this.logger.log(`Start adding message to thread (id: ${threadId})`)
     let thread
     try {
@@ -43,15 +66,15 @@ export class ThreadRepository extends Repository<Thread> {
     thread.messages.push(message)
     await thread.save()
     this.logger.log(`Message added to thread (id: ${threadId})`)
-    const newThread = await this.findThreadWithSenderAndReceiverAndMessages(thread.id)
+    const newThread = await this.findThreadWithMessages(thread.id, limit)
 
     this.logger.log(`Message loaded again with thread (id: ${threadId})`)
     // todo fix loading of device token
-    this.sendPushNotification("TEST MESSAGE", token)
-    this.createFireStoreMessage(
-      message,
-      `${newThread.sender.id}_${newThread.receiver.id}`,
-    )
+    this.sendPushNotification(message, tokens)
+    // this.createFireStoreMessage(
+    //   message,
+    //   `${newThread.sender.id}_${newThread.receiver.id}`,
+    // )
 
     this.logger.log(`Message created! For thread (id: ${threadId})`)
     return newThread
@@ -60,8 +83,8 @@ export class ThreadRepository extends Repository<Thread> {
   async getMessages(thread: Thread): Promise<any> {
     let loadedThread
     try {
-      loadedThread = await this.findThreadWithSenderAndReceiverAndMessages(thread.id)
-      const messages = await this.getThreadMessages(loadedThread.firebaseDocId)
+      loadedThread = await this.findFullThread(thread.id)
+      // const messages = await this.getThreadMessages(loadedThread.firebaseDocId)
       return loadedThread
     } catch (error) {
       throw new InternalServerErrorException()
@@ -71,29 +94,106 @@ export class ThreadRepository extends Repository<Thread> {
   // async deleteMessage(): Promise<Thread> {}
 
   async sendPushNotification(
-    messageBody: string,
-    recipientToken: string,
+    message: Message,
+    recipientTokens: string[],
   ): Promise<any> {
-    this.logger.log(`Start sending of push notification message to device (deviceToken: ${recipientToken})`)
-    const message: firebase.messaging.Message = {
-      data: {
-        message: messageBody,
-      },
-      token: recipientToken,
+    this.logger.log(
+      `Start sending of push notification message to device (deviceTokens: ${JSON.stringify(
+        recipientTokens,
+      )})`,
+    )
+
+    const messages: any = []
+    recipientTokens.map((token: any) => {
+      messages.push({
+        data: { message: JSON.stringify(message) },
+        token,
+      })
+    })
+    const response = await firebase.messaging().sendAll(messages)
+    console.log('responses ->', response)
+    this.logger.log(`Finished creating.`)
+  }
+
+  async findThreadWithMessagesById(id: number): Promise<Thread> {
+    const thread = await this.findOne(id, { relations: ['messages'] })
+    if (!thread) {
+      throw new NotFoundException('Thread does not exists')
     }
 
-    try {
-      this.logger.log(`Message for push notification sending is (message: ${JSON.stringify(message)})`)
-      const response = await firebase.messaging().send(message)
-      this.logger.log(
-        `Finished creating. Response: ${JSON.stringify(response)}`,
+    return thread
+  }
+
+  async findThreadWithSenderAndReceiver(id: number): Promise<Thread> {
+    const thread = await this.findOne(id, { relations: ['sender', 'receiver'] })
+    if (!thread) {
+      throw new NotFoundException('Thread does not exists')
+    }
+
+    return thread
+  }
+
+  async findFullThread(id: number): Promise<Thread> {
+    const thread = await this.findOne(id, {
+      relations: ['sender', 'receiver', 'messages'],
+    })
+    if (!thread) {
+      throw new NotFoundException('Thread does not exists')
+    }
+
+    return thread
+  }
+
+  async findThreadByType(
+    sender: User,
+    receiver: User,
+    type: ThreadType = ThreadType.REGULAR,
+  ): Promise<any> {
+    const thread = await this.findOne(
+      { sender, receiver, type },
+      { relations: ['sender', 'receiver', 'messages'] },
+    )
+
+    return thread
+  }
+
+  async findThreadByTypeWithMessageRules(
+    id: number,
+    type: ThreadType,
+    lastMessageId: number,
+    limit: number,
+  ): Promise<any> {
+    const response = await this.createQueryBuilder('threads')
+      .leftJoinAndSelect('threads.sender', 'sender')
+      .leftJoinAndSelect('threads.receiver', 'receiver')
+      .leftJoinAndSelect(
+        'threads.messages',
+        'messages',
+        'messages.threadId = threads.id AND messages.id > :last_message_id',
       )
+      .where('threads.id = :id AND threads.type = :type')
+      .orderBy('messages.id', 'DESC')
+      .limit(limit)
+      .setParameter('id', id)
+      .setParameter('type', type)
+      .setParameter('last_message_id', lastMessageId)
+      .getMany()
 
-      return response
-    } catch (error) {
-      this.logger.error(`Catch some error. Error: ${JSON.stringify(error)}`)
-      throw new InternalServerErrorException('Error sending message:', error)
-    }
+    return response[0]
+  }
+
+  async findThreadWithMessages(id: number, limit: number): Promise<any> {
+    const response = await this.createQueryBuilder('threads')
+      .leftJoinAndSelect('threads.sender', 'sender')
+      .leftJoinAndSelect('threads.receiver', 'receiver')
+      .leftJoinAndSelect('threads.messages', 'messages')
+      .where('threads.id = :id')
+      .orderBy('messages.id', 'DESC')
+      .limit(limit)
+      .setParameter('id', id)
+      .getMany()
+
+    return response[0]
   }
 
   /** FIRESTORE PART */
@@ -325,9 +425,7 @@ export class ThreadRepository extends Repository<Thread> {
         .get()
 
       const messages = response.docs.map(doc => doc.data())
-      this.logger.log(
-        `Finished getting. Response: ${JSON.stringify(messages)}`,
-      )
+      this.logger.log(`Finished getting. Response: ${JSON.stringify(messages)}`)
 
       return messages
     } catch (error) {
@@ -364,32 +462,5 @@ export class ThreadRepository extends Repository<Thread> {
       this.logger.error(`Catch some error. Error: ${JSON.stringify(error)}`)
       throw new InternalServerErrorException(error)
     }
-  }
-
-  async findThreadWithMessagesById(id: number): Promise<Thread> {
-    const thread = await this.findOne(id, { relations: ['messages'] })
-    if (!thread) {
-      throw new NotFoundException('Thread does not exists')
-    }
-
-    return thread
-  }
-
-  async findThreadWithSenderAndReceiver(id: number): Promise<Thread> {
-    const thread = await this.findOne(id, { relations: ['sender', 'receiver'] })
-    if (!thread) {
-      throw new NotFoundException('Thread does not exists')
-    }
-
-    return thread
-  }
-
-  async findThreadWithSenderAndReceiverAndMessages(id: number): Promise<Thread> {
-    const thread = await this.findOne(id, { relations: ['sender', 'receiver', 'messages'] })
-    if (!thread) {
-      throw new NotFoundException('Thread does not exists')
-    }
-
-    return thread
   }
 }

@@ -7,13 +7,15 @@ import { UserRepository } from './user.repository';
 import { UsersController } from './users.controller';
 import { ThreadsService } from '../threads/threads.service';
 import { ThreadRepository } from '../threads/thread.repository';
+import { MessageRepository } from '../messages/message.repository';
 
 @Module({
   imports: [
     AuthModule,
     TypeOrmModule.forFeature([
       UserRepository,
-      ThreadRepository
+      ThreadRepository, 
+      MessageRepository
     ])
   ],
   controllers: [UsersController],

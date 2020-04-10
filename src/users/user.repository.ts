@@ -60,10 +60,11 @@ export class UserRepository extends Repository<User> {
   }
 
   async addUserDevice(id: number, params: any): Promise<void> {
-    const { token } = params
+    const { pushToken } = params
+    // console.log(params);
     let user
     try {
-      user = await this.findOne(id, {relations: ['devices']})
+      user = await this.getFullUser(id)
     } catch (error) {
       if (
         error.errno === 1267 ||
@@ -80,7 +81,7 @@ export class UserRepository extends Repository<User> {
     }
 
     const device = new Device()
-    device.token = token
+    device.token = pushToken
     user.devices.push(device)
     
     try {
@@ -148,14 +149,15 @@ export class UserRepository extends Repository<User> {
     return userWithDevices;
   }
 
-  async getActiveUserDeviceToken(user: User): Promise<any> {
+  async getActiveUserDeviceTokens(user: User): Promise<any> {
     const userWithDevices = await this.getUserWithDevices(user.id)
     if (!userWithDevices) {
       throw new InternalServerErrorException('User with such id not found')
     }
-    const lastDevice = userWithDevices.devicesCount - 1
-    const lastDeviceToken = userWithDevices.devices[lastDevice].token
-    return lastDeviceToken;
+    
+    const deviceTokens: any = [];
+    userWithDevices.devices.map((device) =>  deviceTokens.push(device.token))
+    return deviceTokens;
   }
 
   async getUserWithContacts(id: number): Promise<User | undefined> {
@@ -177,6 +179,14 @@ export class UserRepository extends Repository<User> {
   async getUserWithDevices(id: number): Promise<User | undefined> {
     const user = await this.findOne(id, {
       relations: ['devices'],
+    })
+
+    return user
+  }
+
+  async getFullUser(id: number): Promise<User | undefined> {
+    const user = await this.findOne(id, {
+      relations: ['contacts', 'contacting', 'devices'],
     })
 
     return user
