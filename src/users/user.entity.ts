@@ -27,7 +27,7 @@ export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number
 
-  @ApiProperty({ enum: UserRole, default: UserRole.CLIENT })
+  @ApiProperty({ enum: UserRole, default: UserRole.CLIENT, example: UserRole.CLIENT})
   @Column({
     type: 'enum',
     enum: UserRole,
@@ -36,24 +36,24 @@ export class User extends BaseEntity {
   })
   role: UserRole
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, example: '380958764576'})
   @Column({ type: 'varchar', length: 150, nullable: false })
   phone: string
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, example: '380958764576'})
   @Column({ type: 'varchar', length: 255, nullable: true })
   @IsEmail()
   email!: string
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, example: '380958764576'})
   @Column({ type: 'varchar', length: 255, nullable: true })
   avatar!: string
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, example: '380958764576'})
   @Column({ type: 'varchar', length: 150, nullable: true })
   firstName!: string
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, example: '380958764576'})
   @Column({ type: 'varchar', length: 150, nullable: true })
   lastName!: string
 
@@ -73,7 +73,7 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updated!: Date
 
-  @ApiProperty({ type: [User] })
+  @ApiProperty({ type: [User]})
   @ManyToMany(
     type => User,
     user => user.contacting,
@@ -81,7 +81,7 @@ export class User extends BaseEntity {
   @JoinTable()
   contacts: User[]
 
-  @ApiProperty({ type: [User] })
+  @ApiProperty({ type: [User]})
   @ManyToMany(
     type => User,
     user => user.contacts,

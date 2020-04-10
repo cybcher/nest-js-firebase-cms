@@ -25,10 +25,6 @@ import { ThreadType } from './thread-type.enum'
 export class ThreadsController {
   constructor(private threadService: ThreadsService) {}
 
-  @ApiCreatedResponse({
-    description: 'Created. The thread has been successfully created. ',
-    type: Thread,
-  })
   @ApiQuery({
     name: 'receiver_id',
     type: Number,
@@ -44,13 +40,13 @@ export class ThreadsController {
   @ApiQuery({
     name: 'have_messages',
     type: Boolean,
-    description: 'User ID that should receive your message',
+    description: 'Device have cached messages?',
     example: true,
   })
   @ApiQuery({
     name: 'type',
     enum: ThreadType,
-    description: 'User ID that should receive your message',
+    description: 'Thread type',
     example: ThreadType.REGULAR,
   })
   @ApiOkResponse({
