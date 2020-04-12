@@ -97,24 +97,35 @@ export class ThreadsService {
     }
 
     if (!thread || (Array.isArray(thread) && thread.length === 0)) {
-      const threadExist = await this.threadRepository.findOne({
+      let threadExists: any;
+      // check for sender as receiver
+      threadExists = await this.threadRepository.findOne({
         sender: senderUser,
         receiver: receiverUser,
         type,
       })
 
-      if (!threadExist) {
-        const newThread = await this.threadRepository.createThread(
-          senderUser,
-          receiverUser,
+      if (!threadExists) {
+        // check for receiver as sender
+        threadExists = await this.threadRepository.findOne({
+          sender: receiverUser,
+          receiver: senderUser,
           type,
-        )
+        })
 
-        return newThread
+        if (!threadExists) {
+          const newThread = await this.threadRepository.createThread(
+            senderUser,
+            receiverUser,
+            type,
+          )
+  
+          return newThread
+        }
       }
 
       thread = await this.threadRepository.findThreadWithMessages(
-        threadExist.id,
+        threadExists.id,
         loadMessages ? 0 : this.messageLimit,
       )
     }
