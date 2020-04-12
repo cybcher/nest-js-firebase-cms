@@ -37,7 +37,7 @@ export class ThreadsService {
       threadId,
     )
     
-    if (sender.id !== thread.sender.id || sender.id !== thread.receiver.id) {
+    if (sender.id !== thread.sender.id && sender.id !== thread.receiver.id) {
       throw new NotFoundException()
     }
     
