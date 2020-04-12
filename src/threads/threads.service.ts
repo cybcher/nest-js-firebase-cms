@@ -6,12 +6,12 @@ import {
 } from '@nestjs/common'
 
 import { User } from '../users/user.entity'
-import { ThreadType } from './thread-type.enum'
+import { ThreadDto } from './dto/thread.dto'
 import { Message } from '../messages/message.entity'
 import { ThreadRepository } from './thread.repository'
 import { UserRepository } from '../users/user.repository'
 import { MessageRepository } from '../messages/message.repository'
-import { MessageType } from '../messages/message-type.enum'
+import { ThreadAddMessageDto } from './dto/thread-add-message.dto'
 
 @Injectable()
 export class ThreadsService {
@@ -27,20 +27,21 @@ export class ThreadsService {
   async addMessage(
     sender: User,
     threadId: number,
-    messageType: MessageType,
-    messageValue: string,
+    threadAddMessageDto: ThreadAddMessageDto,
   ): Promise<any> {
+    const { type: messageType, value: messageValue } = threadAddMessageDto
+
     const message = new Message()
     message.type = messageType
     message.value = messageValue
     const thread = await this.threadRepository.findThreadWithSenderAndReceiver(
       threadId,
     )
-    
+
     if (sender.id !== thread.sender.id && sender.id !== thread.receiver.id) {
       throw new NotFoundException()
     }
-    
+
     if (!thread) {
       throw new InternalServerErrorException()
     }
@@ -64,14 +65,15 @@ export class ThreadsService {
     return threadWithNewMessage
   }
 
-  async getMessages(
-    sender: User,
-    receiverId: number,
-    lastMessageId: number,
-    haveMessages: boolean,
-    loadMessages: boolean,
-    type: ThreadType = ThreadType.REGULAR,
-  ): Promise<any> {
+  async getMessages(sender: User, threadDto: ThreadDto): Promise<any> {
+    const {
+      receiver_id: receiverId,
+      last_message_id: lastMessageId,
+      load_old: loadOldMessages,
+      load_new: loadNewMessages,
+      type: threadType,
+    } = threadDto
+
     const receiverUser = await this.userRepository.findOne(receiverId)
     const senderUser = await this.userRepository.findOne(sender.id)
 
@@ -80,7 +82,7 @@ export class ThreadsService {
     }
 
     let thread: any
-    if ((loadMessages || haveMessages) && lastMessageId > 0) {
+    if ((loadNewMessages || loadOldMessages) && lastMessageId > 0) {
       const messageExists = await this.messageRepository.findOne(
         lastMessageId,
         {
@@ -94,20 +96,20 @@ export class ThreadsService {
 
       thread = await this.threadRepository.findThreadByTypeWithMessageRules(
         messageExists.thread.id,
-        type,
+        threadType,
         lastMessageId,
-        loadMessages,
-        loadMessages ? 0 : this.messageLimit,
+        loadNewMessages,
+        loadNewMessages ? 0 : this.messageLimit,
       )
     }
 
     if (!thread || (Array.isArray(thread) && thread.length === 0)) {
-      let threadExists: any;
+      let threadExists: any
       // check for sender as receiver
       threadExists = await this.threadRepository.findOne({
         sender: senderUser,
         receiver: receiverUser,
-        type,
+        type: threadType,
       })
 
       if (!threadExists) {
@@ -115,23 +117,23 @@ export class ThreadsService {
         threadExists = await this.threadRepository.findOne({
           sender: receiverUser,
           receiver: senderUser,
-          type,
+          type: threadType,
         })
 
         if (!threadExists) {
           const newThread = await this.threadRepository.createThread(
             senderUser,
             receiverUser,
-            type,
+            threadType,
           )
-  
+
           return newThread
         }
       }
 
       thread = await this.threadRepository.findThreadWithMessages(
         threadExists.id,
-        loadMessages ? 0 : this.messageLimit,
+        loadNewMessages ? 0 : this.messageLimit,
       )
     }
 

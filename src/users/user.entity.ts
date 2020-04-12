@@ -1,3 +1,4 @@
+
 import {
   Entity,
   Column,
@@ -75,7 +76,7 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updated!: Date
 
-  @ApiProperty({ type: [User]})
+  @ApiProperty({ name: 'contacts', type: [User], isArray: true})
   @ManyToMany(
     type => User,
     user => user.contacting,
@@ -83,7 +84,7 @@ export class User extends BaseEntity {
   @JoinTable()
   contacts: User[]
 
-  @ApiProperty({ type: [User]})
+  @ApiProperty({ name: 'contacting', type: [User], isArray: true})
   @ManyToMany(
     type => User,
     user => user.contacts,
@@ -117,10 +118,6 @@ export class User extends BaseEntity {
   @Exclude()
   @RelationCount((user: User) => user.devices)
   devicesCount: number
-
-  @Exclude()
-  @RelationCount((user: User) => user.threads)
-  threadCount: number
 
   async validatePhone(phone: string): Promise<boolean> {
     const hash = await bcrypt.hash(phone, this.salt)
