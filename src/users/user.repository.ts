@@ -8,6 +8,8 @@ import * as bcrypt from 'bcrypt'
 
 import { User } from './user.entity'
 import { Device } from '../devices/device.entity';
+import { UserDeviceDto } from './dto/user-device.dto';
+import { UserContactsDto } from './dto/user-contacts.dto';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -59,8 +61,8 @@ export class UserRepository extends Repository<User> {
     return bcrypt.hash(phone, salt)
   }
 
-  async addUserDevice(id: number, params: any): Promise<void> {
-    const { pushToken } = params
+  async addUserDevice(id: number, userDeviceDto: UserDeviceDto): Promise<void> {
+    const { push_token: pushToken } = userDeviceDto
     // console.log(params);
     let user
     try {
@@ -119,7 +121,8 @@ export class UserRepository extends Repository<User> {
     }
   }
 
-  async checkAndSaveUserContacts(contacts: string[], user: User): Promise<any> {
+  async checkAndSaveUserContacts(user: User, userContactsDto: UserContactsDto): Promise<any> {
+    const { contacts } = userContactsDto;
     const fullUser = await this.getUserWithContacts(user.id)
     if (!fullUser) {
       throw new InternalServerErrorException('User with such id not found')

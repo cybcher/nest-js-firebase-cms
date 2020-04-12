@@ -76,7 +76,7 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updated!: Date
 
-  @ApiProperty({ name: 'contacts', type: [User], isArray: true})
+  @ApiProperty({ name: 'contacts', type: User, isArray: true, example: [new User()]})
   @ManyToMany(
     type => User,
     user => user.contacting,
@@ -84,7 +84,7 @@ export class User extends BaseEntity {
   @JoinTable()
   contacts: User[]
 
-  @ApiProperty({ name: 'contacting', type: [User], isArray: true})
+  @ApiProperty({ name: 'contacting', type: User, isArray: true, example: [new User()]})
   @ManyToMany(
     type => User,
     user => user.contacts,

@@ -14,6 +14,7 @@ import {
   ApiParam,
   ApiResponse,
   ApiQuery,
+  ApiBody,
 } from '@nestjs/swagger'
 import { FileInterceptor } from '@nestjs/platform-express'
 
@@ -22,6 +23,8 @@ import { UsersService } from './users.service'
 import { GetUser } from './get-user.decorator'
 import { UserRepository } from './user.repository'
 import { ThreadsService } from '../threads/threads.service'
+import { UserDeviceDto } from './dto/user-device.dto';
+import { UserContactsDto } from './dto/user-contacts.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -33,22 +36,20 @@ export class UsersController {
     private userRepository: UserRepository,
   ) {}
 
+  @ApiBody({
+    type: UserDeviceDto,
+    description: 'Click on `Schema` to see details 🔽',
+  })
   @ApiCreatedResponse({
     description:
       'Created. The `push_token` has been successfully saved as new `device`. ',
   })
-  @ApiParam({
-    name: 'push_token',
-    type: String,
-    description: 'Token that will be used as token to receive push messages',
-    example: '******0j1o3nih9gejoniwne',
-  })
   @Post('push')
-  saveUserPushToken(
+  saveUserDevice(
     @GetUser() user: User,
-    @Body('push_token') pushToken: string,
+    @Body() userDeviceDto: UserDeviceDto,
   ): Promise<void> {
-    return this.userService.addUserDevice(user.id, { pushToken })
+    return this.userService.addUserDevice(user.id, userDeviceDto)
   }
 
   @ApiResponse({
@@ -60,23 +61,20 @@ export class UsersController {
     return this.userService.getUserDevices(user)
   }
 
+  @ApiBody({
+    type: UserContactsDto,
+    description: 'Click on `Schema` to see details 🔽',
+  })
   @ApiResponse({
     description: 'Search and attach contacts to user',
     type: User,
   })
-  @ApiQuery({
-    name: 'contacts',
-    type: Object,
-    description: 'List of phone numbers that can be used as contacts',
-    example: { contacts: ['658989239832', '9012909012'] },
-  })
-  // @UseInterceptors(ClassSerializerInterceptor)
   @Post('contacts')
   addToContacts(
     @GetUser() user: User,
-    @Body('contacts') contacts: string[],
+    @Body() userContactsDto: UserContactsDto,
   ): Promise<User> {
-    return this.userService.checkAndSaveUserContacts(contacts, user)
+    return this.userService.checkAndSaveUserContacts(user, userContactsDto)
   }
 
   @Post('avatar')
