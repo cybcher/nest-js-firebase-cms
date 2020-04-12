@@ -25,6 +25,7 @@ export class ThreadsService {
   private messageLimit = 20
 
   async addMessage(
+    sender: User,
     threadId: number,
     messageType: MessageType,
     messageValue: string,
@@ -35,7 +36,11 @@ export class ThreadsService {
     const thread = await this.threadRepository.findThreadWithSenderAndReceiver(
       threadId,
     )
-
+    
+    if (sender.id !== thread.sender.id || sender.id !== thread.receiver.id) {
+      throw new NotFoundException()
+    }
+    
     if (!thread) {
       throw new InternalServerErrorException()
     }

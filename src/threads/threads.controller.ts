@@ -107,6 +107,6 @@ export class ThreadsController {
     @Body('type') messageType: MessageType,
     @Body('value') messageValue: string,
   ): Promise<any> {
-    return this.threadService.addMessage(threadId, messageType, messageValue)
+    return this.threadService.addMessage(sender, threadId, messageType, messageValue)
   }
 }
