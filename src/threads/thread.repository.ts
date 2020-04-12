@@ -70,6 +70,7 @@ export class ThreadRepository extends Repository<Thread> {
 
     this.logger.log(`Message loaded again with thread (id: ${threadId})`)
     // todo fix loading of device token
+    console.log(message);
     this.sendPushNotification(message, tokens)
     // this.createFireStoreMessage(
     //   message,

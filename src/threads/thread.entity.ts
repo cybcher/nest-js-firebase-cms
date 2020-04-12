@@ -56,7 +56,7 @@ export class Thread extends BaseEntity {
   )
   receiver: User
 
-  @ApiProperty({ type: [() => Message]})
+  @ApiProperty({ type: [Message]})
   @OneToMany(
     type => Message,
     message => message.thread,
