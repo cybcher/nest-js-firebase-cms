@@ -40,27 +40,29 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 150, nullable: false })
   phone: string
 
-  @ApiProperty({ type: String, example: '380958764576'})
+  @ApiProperty({ type: String, example: 'example@example.com'})
   @Column({ type: 'varchar', length: 255, nullable: true })
   @IsEmail()
   email!: string
 
-  @ApiProperty({ type: String, example: '380958764576'})
+  @ApiProperty({ type: String, example: '/file/path/image.jpg'})
   @Column({ type: 'varchar', length: 255, nullable: true })
   avatar!: string
 
-  @ApiProperty({ type: String, example: '380958764576'})
+  @ApiProperty({ type: String, example: 'John'})
   @Column({ type: 'varchar', length: 150, nullable: true })
   firstName!: string
 
-  @ApiProperty({ type: String, example: '380958764576'})
+  @ApiProperty({ type: String, example: 'Dou'})
   @Column({ type: 'varchar', length: 150, nullable: true })
   lastName!: string
 
+  @ApiProperty({ type: String, example: 'qeiOGJ****qeqfG421'})
   @Column({ type: 'varchar', length: 255, nullable: false })
   @Exclude()
   salt: string
 
+  @ApiProperty({ type: String, example: 'qeiOGJ****qeqfG421'})
   @Column({ type: 'varchar', length: 255, nullable: false })
   @Exclude()
   authToken: string
@@ -88,6 +90,7 @@ export class User extends BaseEntity {
   )
   contacting: User[]
 
+  @ApiProperty({ type: [Device]})
   @OneToMany(
     type => Device,
     device => device.user,
@@ -95,6 +98,7 @@ export class User extends BaseEntity {
   )
   devices: Device[]
 
+  @ApiProperty({ type: [Thread]})
   @OneToMany(
     type => Thread,
     thread => thread.sender,
