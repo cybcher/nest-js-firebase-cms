@@ -27,9 +27,13 @@ export class Message extends BaseEntity {
   })
   type: MessageType
 
-  @ApiProperty({ type: String, default: "some example" })
+  @ApiProperty({ type: String, example: "some example" })
   @Column()
   value: string
+
+  @ApiProperty({ type: Number, example: 1 })
+  @Column({ type: Number })
+  senderId: number
 
   @ApiProperty({ type: () => Thread })
   @ManyToOne(

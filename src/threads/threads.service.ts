@@ -34,6 +34,7 @@ export class ThreadsService {
     const message = new Message()
     message.type = messageType
     message.value = messageValue
+    message.senderId = sender.id
     const thread = await this.threadRepository.findThreadWithSenderAndReceiver(
       threadId,
     )
