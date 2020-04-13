@@ -107,7 +107,7 @@ export class ThreadRepository extends Repository<Thread> {
     const messages: any = []
     recipientTokens.map((token: any) => {
       messages.push({
-        data: { message: JSON.stringify(message) },
+        data: { message },
         token,
       })
     })
