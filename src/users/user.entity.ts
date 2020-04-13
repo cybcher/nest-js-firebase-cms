@@ -1,4 +1,3 @@
-
 import {
   Entity,
   Column,
@@ -28,7 +27,11 @@ export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number
 
-  @ApiProperty({ enum: UserRole, default: UserRole.CLIENT, example: UserRole.CLIENT})
+  @ApiProperty({
+    enum: UserRole,
+    default: UserRole.CLIENT,
+    example: UserRole.CLIENT,
+  })
   @Column({
     type: 'enum',
     enum: UserRole,
@@ -37,33 +40,57 @@ export class User extends BaseEntity {
   })
   role: UserRole
 
-  @ApiProperty({ type: String, example: '380958764576'})
+  @ApiProperty({ type: String, example: '380958764576' })
   @Column({ type: 'varchar', length: 150, nullable: false })
   phone: string
 
-  @ApiProperty({ type: String, example: 'example@example.com'})
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @ApiProperty({ type: String, example: 'example@example.com' })
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    charset: 'utf8',
+    collation: 'utf8_general_ci',
+  })
   @IsEmail()
   email!: string
 
-  @ApiProperty({ type: String, example: '/file/path/image.jpg'})
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @ApiProperty({ type: String, example: '/file/path/image.jpg' })
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    charset: 'utf8',
+    collation: 'utf8_general_ci',
+  })
   avatar!: string
 
-  @ApiProperty({ type: String, example: 'John'})
-  @Column({ type: 'varchar', length: 150, nullable: true })
+  @ApiProperty({ type: String, example: 'John' })
+  @Column({
+    type: 'varchar',
+    length: 150,
+    nullable: true,
+    charset: 'utf8',
+    collation: 'utf8_general_ci',
+  })
   firstName!: string
 
-  @ApiProperty({ type: String, example: 'Dou'})
-  @Column({ type: 'varchar', length: 150, nullable: true })
+  @ApiProperty({ type: String, example: 'Dou' })
+  @Column({
+    type: 'varchar',
+    length: 150,
+    nullable: true,
+    charset: 'utf8',
+    collation: 'utf8_general_ci',
+  })
   lastName!: string
 
-  @ApiProperty({ type: String, example: 'qeiOGJ****qeqfG421'})
+  @ApiProperty({ type: String, example: 'qeiOGJ****qeqfG421' })
   @Column({ type: 'varchar', length: 255, nullable: false })
   @Exclude()
   salt: string
 
-  @ApiProperty({ type: String, example: 'qeiOGJ****qeqfG421'})
+  @ApiProperty({ type: String, example: 'qeiOGJ****qeqfG421' })
   @Column({ type: 'varchar', length: 255, nullable: false })
   @Exclude()
   authToken: string
@@ -76,7 +103,12 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updated!: Date
 
-  @ApiProperty({ name: 'contacts', type: User, isArray: true, example: [new User()]})
+  @ApiProperty({
+    name: 'contacts',
+    type: User,
+    isArray: true,
+    example: [new User()],
+  })
   @ManyToMany(
     type => User,
     user => user.contacting,
@@ -84,14 +116,19 @@ export class User extends BaseEntity {
   @JoinTable()
   contacts: User[]
 
-  @ApiProperty({ name: 'contacting', type: User, isArray: true, example: [new User()]})
+  @ApiProperty({
+    name: 'contacting',
+    type: User,
+    isArray: true,
+    example: [new User()],
+  })
   @ManyToMany(
     type => User,
     user => user.contacts,
   )
   contacting: User[]
 
-  @ApiProperty({ type: [Device]})
+  @ApiProperty({ type: [Device] })
   @OneToMany(
     type => Device,
     device => device.user,
@@ -99,7 +136,7 @@ export class User extends BaseEntity {
   )
   devices: Device[]
 
-  @ApiProperty({ type: [Thread]})
+  @ApiProperty({ type: [Thread] })
   @OneToMany(
     type => Thread,
     thread => thread.sender,

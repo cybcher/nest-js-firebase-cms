@@ -27,8 +27,8 @@ export class Message extends BaseEntity {
   })
   type: MessageType
 
-  @ApiProperty({ type: String, example: "some example" })
-  @Column()
+  @ApiProperty({ type: String, example: 'some example' })
+  @Column({ nullable: false, charset: 'utf8', collation: 'utf8_general_ci' })
   value: string
 
   @ApiProperty({ type: Number, example: 1 })
