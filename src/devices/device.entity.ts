@@ -6,10 +6,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm'
 import { User } from '../users/user.entity'
 
 @Entity('devices')
+@Unique(['token'])
 export class Device extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number
