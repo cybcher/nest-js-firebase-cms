@@ -27,8 +27,9 @@ export class Message extends BaseEntity {
   })
   type: MessageType
 
+  // ALTER TABLE messages MODIFY COLUMN value VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
   @ApiProperty({ type: String, example: 'some example' })
-  @Column({ nullable: false, charset: 'utf8', collation: 'utf8_general_ci' })
+  @Column({type: 'varchar', length: 255, nullable: false, charset: 'utf8', collation: 'utf8_general_ci' })
   value: string
 
   @ApiProperty({ type: Number, example: 1 })
