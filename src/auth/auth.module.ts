@@ -19,7 +19,7 @@ const authSecret = configuration().auth.secret
     JwtModule.register({
       secret: authSecret,
       signOptions: {
-        expiresIn: "7d",
+        expiresIn: "365d",
       },
     }),
     TypeOrmModule.forFeature([UserRepository]),
