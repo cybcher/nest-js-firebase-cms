@@ -15,6 +15,8 @@ import {
   ApiProperty,
   ApiOkResponse,
   ApiCreatedResponse,
+  ApiParam,
+  ApiConsumes,
 } from '@nestjs/swagger'
 import { extname } from 'path'
 import { diskStorage } from 'multer'
@@ -29,6 +31,7 @@ import { UserDeviceDto } from './dto/user-device.dto'
 import { UserProfileDto } from './dto/user-profile.dto'
 import { UserContactsDto } from './dto/user-contacts.dto'
 import { ThreadsService } from '../threads/threads.service'
+import { UserAvatarDto } from './dto/user-avatar.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -58,7 +61,7 @@ export class UsersController {
     return this.userService.addUserDevice(user.id, userDeviceDto)
   }
 
-  @ApiResponse({
+  @ApiCreatedResponse({
     description: 'Get User with list of devices',
     type: User,
   })
@@ -71,7 +74,7 @@ export class UsersController {
     type: UserContactsDto,
     description: 'Click on `Schema` to see details 🔽',
   })
-  @ApiResponse({
+  @ApiCreatedResponse({
     description: 'Search and attach contacts to user',
     type: User,
   })
@@ -83,7 +86,7 @@ export class UsersController {
     return this.userService.checkAndSaveUserContacts(user, userContactsDto)
   }
 
-  @ApiResponse({
+  @ApiCreatedResponse({
     description: 'Get extended profile information',
     type: User,
   })
@@ -93,7 +96,7 @@ export class UsersController {
   }
 
   @ApiBody({
-    type: UserContactsDto,
+    type: UserProfileDto,
     description: 'Click on `Schema` to see details 🔽',
   })
   @ApiOkResponse({
@@ -109,9 +112,10 @@ export class UsersController {
     return this.userService.updateProfile(user, profileData)
   }
 
-  @ApiProperty({
-    name: 'image',
-    description: 'Attach file "image" to form data request',
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: "Image file",
+    type: UserAvatarDto
   })
   @ApiOkResponse({
     description: 'Update user profile avatar',
