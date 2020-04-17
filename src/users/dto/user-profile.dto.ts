@@ -2,20 +2,20 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UserProfileDto {
     @ApiProperty({
-        name: 'first_name',
+        name: 'firstName',
         type: String,
         description: 'User first name (optional)',
         example: 'John',
     })
-    first_name!: string;
+    firstName!: string;
 
     @ApiProperty({
-        name: 'last_name',
+        name: 'lastName',
         type: String,
         description: 'User last name (optional)',
         example: 'Jey',
     })
-    last_name!: string;
+    lastName!: string;
 
     @ApiProperty({
         name: 'email',

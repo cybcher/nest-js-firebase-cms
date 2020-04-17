@@ -67,7 +67,7 @@ export class UserRepository extends Repository<User> {
     user: User,
     profileData: UserProfileDto,
   ): Promise<User | any> {
-    const { first_name: firstName, last_name: lastName, email } = profileData
+    const { firstName, lastName, email } = profileData
     const fullUser = await this.getFullUser(user.id)
     if (!fullUser) {
       throw new NotFoundException('User not found')
