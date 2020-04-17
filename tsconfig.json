@@ -16,7 +16,8 @@
     "strict": true,
     "preserveConstEnums": true,
     "skipLibCheck": true,
-    "typeRoots": ["./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types"],
+    "noImplicitAny": false,
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

@@ -1,3 +1,4 @@
+import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 
@@ -11,6 +12,9 @@ import { MessageRepository } from '../messages/message.repository';
 
 @Module({
   imports: [
+    MulterModule.register({
+      dest: './files',
+    }),
     AuthModule,
     TypeOrmModule.forFeature([
       UserRepository,

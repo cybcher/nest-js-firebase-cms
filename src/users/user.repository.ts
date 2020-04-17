@@ -7,9 +7,11 @@ import { Repository, EntityRepository } from 'typeorm'
 import * as bcrypt from 'bcrypt'
 
 import { User } from './user.entity'
-import { Device } from '../devices/device.entity';
-import { UserDeviceDto } from './dto/user-device.dto';
-import { UserContactsDto } from './dto/user-contacts.dto';
+import { Device } from '../devices/device.entity'
+import { UserDeviceDto } from './dto/user-device.dto'
+import { UserContactsDto } from './dto/user-contacts.dto'
+import { IsEmail } from 'class-validator'
+import { UserProfileDto } from './dto/user-profile.dto'
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -57,6 +59,42 @@ export class UserRepository extends Repository<User> {
     return null
   }
 
+  async getProfile(user: User): Promise<User | any> {
+    return this.getFullUser(user.id)
+  }
+
+  async updateProfile(
+    user: User,
+    profileData: UserProfileDto,
+  ): Promise<User | any> {
+    const { first_name: firstName, last_name: lastName, email } = profileData
+    const fullUser = await this.getFullUser(user.id)
+    if (!fullUser) {
+      throw new NotFoundException('User not found')
+    }
+
+    fullUser.firstName = firstName || fullUser.firstName
+    fullUser.lastName = lastName || fullUser.lastName
+    fullUser.email = email || fullUser.email
+
+    await fullUser.save()
+    const loadSavedUser = await this.getFullUser(fullUser.id)
+    return loadSavedUser
+  }
+
+  async saveAvatar(user: User, avatarUrl: string): Promise<User | any> {
+    const fullUser = await this.getFullUser(user.id)
+    if (!fullUser) {
+      throw new NotFoundException('User not found')
+    }
+
+    fullUser.avatar = avatarUrl
+
+    await fullUser.save()
+    const loadSavedUser = await this.getFullUser(fullUser.id)
+    return loadSavedUser
+  }
+
   private async getAuthToken(phone: string, salt: string): Promise<string> {
     return bcrypt.hash(phone, salt)
   }
@@ -85,7 +123,7 @@ export class UserRepository extends Repository<User> {
     const device = new Device()
     device.token = pushToken
     user.devices.push(device)
-    
+
     try {
       await user.save()
     } catch (error) {
@@ -121,8 +159,11 @@ export class UserRepository extends Repository<User> {
     }
   }
 
-  async checkAndSaveUserContacts(user: User, userContactsDto: UserContactsDto): Promise<any> {
-    const { contacts } = userContactsDto;
+  async checkAndSaveUserContacts(
+    user: User,
+    userContactsDto: UserContactsDto,
+  ): Promise<any> {
+    const { contacts } = userContactsDto
     const fullUser = await this.getUserWithContacts(user.id)
     if (!fullUser) {
       throw new InternalServerErrorException('User with such id not found')
@@ -149,7 +190,7 @@ export class UserRepository extends Repository<User> {
       throw new InternalServerErrorException('User with such id not found')
     }
 
-    return userWithDevices;
+    return userWithDevices
   }
 
   async getActiveUserDeviceTokens(user: User): Promise<any> {
@@ -157,10 +198,10 @@ export class UserRepository extends Repository<User> {
     if (!userWithDevices) {
       throw new InternalServerErrorException('User with such id not found')
     }
-    
-    const deviceTokens: any = [];
-    userWithDevices.devices.map((device) =>  deviceTokens.push(device.token))
-    return deviceTokens;
+
+    const deviceTokens: any = []
+    userWithDevices.devices.map(device => deviceTokens.push(device.token))
+    return deviceTokens
   }
 
   async getUserWithContacts(id: number): Promise<User | undefined> {

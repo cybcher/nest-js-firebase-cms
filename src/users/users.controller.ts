@@ -2,34 +2,40 @@ import {
   Get,
   Body,
   Post,
+  HttpCode,
   UseGuards,
   Controller,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common'
-import { AuthGuard } from '@nestjs/passport'
 import {
   ApiTags,
-  ApiCreatedResponse,
-  ApiParam,
-  ApiResponse,
-  ApiQuery,
   ApiBody,
+  ApiResponse,
+  ApiProperty,
+  ApiOkResponse,
+  ApiCreatedResponse,
 } from '@nestjs/swagger'
+import { extname } from 'path'
+import { diskStorage } from 'multer'
+import { AuthGuard } from '@nestjs/passport'
 import { FileInterceptor } from '@nestjs/platform-express'
 
 import { User } from './user.entity'
 import { UsersService } from './users.service'
 import { GetUser } from './get-user.decorator'
 import { UserRepository } from './user.repository'
+import { UserDeviceDto } from './dto/user-device.dto'
+import { UserProfileDto } from './dto/user-profile.dto'
+import { UserContactsDto } from './dto/user-contacts.dto'
 import { ThreadsService } from '../threads/threads.service'
-import { UserDeviceDto } from './dto/user-device.dto';
-import { UserContactsDto } from './dto/user-contacts.dto';
 
 @ApiTags('Users')
 @Controller('users')
 @UseGuards(AuthGuard())
 export class UsersController {
+  SERVER_URL = 'http://161.35.20.152:3000/'
+
   constructor(
     private userService: UsersService,
     private threadService: ThreadsService,
@@ -77,9 +83,60 @@ export class UsersController {
     return this.userService.checkAndSaveUserContacts(user, userContactsDto)
   }
 
+  @ApiResponse({
+    description: 'Get extended profile information',
+    type: User,
+  })
+  @Get('profile')
+  getProfile(@GetUser() user: User): Promise<User> {
+    return this.userService.getProfile(user)
+  }
+
+  @ApiBody({
+    type: UserContactsDto,
+    description: 'Click on `Schema` to see details 🔽',
+  })
+  @ApiOkResponse({
+    description: 'Update user profile data',
+    type: User,
+  })
+  @Post('profile')
+  @HttpCode(200)
+  updateProfile(
+    @GetUser() user: User,
+    @Body() profileData: UserProfileDto,
+  ): Promise<User> {
+    return this.userService.updateProfile(user, profileData)
+  }
+
+  @ApiProperty({
+    name: 'image',
+    description: 'Attach file "image" to form data request',
+  })
+  @ApiOkResponse({
+    description: 'Update user profile avatar',
+    type: User,
+  })
   @Post('avatar')
-  @UseInterceptors(FileInterceptor('image'))
-  async uploadedFile(@UploadedFile() file: any): Promise<any> {
-    return true
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './files',
+
+        filename: (req: any, file: any, cb: any) => {
+          const randomName = Array(32)
+            .fill(null)
+            .map(() => Math.round(Math.random() * 16).toString(16))
+            .join('')
+          return cb(null, `${randomName}${extname(file.originalname)}`)
+        },
+      }),
+    }),
+  )
+  async uploadedFile(
+    @GetUser() user: User,
+    @UploadedFile() file: any,
+  ): Promise<any> {
+    return this.userService.saveAvatar(user, `${this.SERVER_URL}${file.path}`)
   }
 }
