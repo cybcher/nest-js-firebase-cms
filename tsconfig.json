@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
+    "target": "es2017",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "moduleResolution": "node",
+    "lib": ["esnext", "es5", "es6"],
+    "strict": true,
+    "preserveConstEnums": true,
+    "skipLibCheck": true,
+    "typeRoots": ["./node_modules/@types"],
+    "noImplicitAny": false,
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

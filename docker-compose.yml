@@ -1,0 +1,66 @@
+version: "3.7"
+
+services:
+  mariadb:
+    container_name: mariadb
+    image: mariadb
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 250M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    ports:
+      - 3306:3306
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${KARAVANIUM_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${KARAVANIUM_DB_DATABASE}
+      MYSQL_USER: ${KARAVANIUM_DB_USER}
+      MYSQL_PASSWORD: ${KARAVANIUM_DB_PASSWORD}
+    networks: 
+      - karavanium-net
+
+  nest:
+    container_name: nest
+    build:
+      context: .
+      target: development
+    command: npm run start:dev
+    volumes:
+      - .:/usr/src/app/
+      - /usr/src/app/node_modules
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 250M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    ports:
+      - ${KARAVANIUM_SERVER_PORT}:${KARAVANIUM_SERVER_PORT}
+      - 9229:9229
+    env_file:
+      - .env
+    networks: 
+      - karavanium-net
+    depends_on:
+      - mariadb
+
+networks: 
+  karavanium-net:
