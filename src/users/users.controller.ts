@@ -158,7 +158,7 @@ export class UsersController {
     @Param('imageName') imageName: string,
   ): Promise<any> {
     res.setHeader("Content-Type", "image/jpeg")
-    res.attachment('./files/accounts/'+imageName)
-    return res.download('./files/accounts/'+imageName)
+    res.attachment(`./files/accounts/${imageName}`)
+    return res.download(`./files/accounts/${imageName}`)
   }
 }

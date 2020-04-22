@@ -29,8 +29,8 @@ import { User } from '../users/user.entity'
 import { ThreadDto } from './dto/thread.dto'
 import { ThreadsService } from './threads.service'
 import { GetUser } from '../users/get-user.decorator'
-import { ThreadAddMessageDto } from './dto/thread-add-message.dto'
 import { MessageType } from '../messages/message-type.enum';
+import { ThreadAddMessageDto } from './dto/thread-add-message.dto'
 
 @ApiTags('Chat')
 @ApiHeader({
@@ -107,7 +107,7 @@ export class ThreadsController {
     if (messageType === MessageType.IMAGE) {
       return this.threadService.saveFile(sender, threadId, threadAddMessageDto, `${this.SERVER_URL}v1/threads/message/file/${file.filename}`)
     }
-   
+
     return this.threadService.addMessage(sender, threadId, threadAddMessageDto)
   }
 
