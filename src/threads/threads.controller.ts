@@ -118,7 +118,7 @@ export class ThreadsController {
   @ApiOkResponse({
     description: 'File'
   })
-  @Get('message/file/:fileName')
+  @Get('messages/file/:fileName')
   async downloadFile(
     @GetUser() user: User,
     @Res() res: any,
