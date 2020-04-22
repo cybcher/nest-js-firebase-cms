@@ -37,6 +37,7 @@ services:
       target: development
     command: npm run start:dev
     volumes:
+      - ./files:/usr/src/app/files
       - .:/usr/src/app/
       - /usr/src/app/node_modules
     deploy:

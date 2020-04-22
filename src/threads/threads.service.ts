@@ -60,7 +60,50 @@ export class ThreadsService {
       thread.id,
       message,
       [...receiverTokens, ...senderTokens],
-      this.messageLimit,
+      1,
+    )
+
+    return threadWithNewMessage
+  }
+
+  async saveFile(
+    sender: User,
+    threadId: number,
+    threadAddMessageDto: ThreadAddMessageDto,
+    fileUrl: string,
+  ): Promise<any> {
+    const { type: messageType } = threadAddMessageDto
+
+    const message = new Message()
+    message.type = messageType
+    message.value = fileUrl
+    message.senderId = sender.id
+    const thread = await this.threadRepository.findThreadWithSenderAndReceiver(
+      threadId,
+    )
+
+    if (sender.id !== thread.sender.id && sender.id !== thread.receiver.id) {
+      throw new NotFoundException()
+    }
+
+    if (!thread) {
+      throw new InternalServerErrorException()
+    }
+
+    const receiverTokens = await this.userRepository.getActiveUserDeviceTokens(
+      thread.receiver,
+    )
+
+    const senderTokens = await this.userRepository.getActiveUserDeviceTokens(
+      thread.sender,
+    )
+
+    message.thread = thread
+    const threadWithNewMessage = await this.threadRepository.addMessage(
+      thread.id,
+      message,
+      [...receiverTokens, ...senderTokens],
+      1,
     )
 
     return threadWithNewMessage
@@ -95,6 +138,7 @@ export class ThreadsService {
         throw new NotFoundException('Message with such does not find')
       }
 
+      //todo: check max message id of the thread bfore receive
       thread = await this.threadRepository.findThreadByTypeWithMessageRules(
         messageExists.thread.id,
         threadType,

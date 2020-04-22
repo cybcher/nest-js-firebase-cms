@@ -1,7 +1,9 @@
 import {
+  Res,
   Get,
   Body,
   Post,
+  Param,
   HttpCode,
   UseGuards,
   Controller,
@@ -11,12 +13,10 @@ import {
 import {
   ApiTags,
   ApiBody,
-  ApiResponse,
-  ApiProperty,
-  ApiOkResponse,
-  ApiCreatedResponse,
   ApiParam,
   ApiConsumes,
+  ApiOkResponse,
+  ApiCreatedResponse,
 } from '@nestjs/swagger'
 import { extname } from 'path'
 import { diskStorage } from 'multer'
@@ -28,10 +28,10 @@ import { UsersService } from './users.service'
 import { GetUser } from './get-user.decorator'
 import { UserRepository } from './user.repository'
 import { UserDeviceDto } from './dto/user-device.dto'
+import { UserAvatarDto } from './dto/user-avatar.dto';
 import { UserProfileDto } from './dto/user-profile.dto'
 import { UserContactsDto } from './dto/user-contacts.dto'
 import { ThreadsService } from '../threads/threads.service'
-import { UserAvatarDto } from './dto/user-avatar.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -125,7 +125,7 @@ export class UsersController {
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
-        destination: './files',
+        destination: './files/accounts',
 
         filename: (req: any, file: any, cb: any) => {
           const randomName = Array(32)
@@ -141,6 +141,24 @@ export class UsersController {
     @GetUser() user: User,
     @UploadedFile() file: any,
   ): Promise<any> {
-    return this.userService.saveAvatar(user, `${this.SERVER_URL}${file.path}`)
+    return this.userService.saveAvatar(user, `${this.SERVER_URL}v1/users/avatar/${file.filename}`)
+  }
+
+  @ApiParam({
+    name: "imageName",
+    description: "Image name"
+  })
+  @ApiOkResponse({
+    description: 'Image file'
+  })
+  @Get('avatar/:imageName')
+  async downloadFile(
+    @GetUser() user: User,
+    @Res() res: any,
+    @Param('imageName') imageName: string,
+  ): Promise<any> {
+    res.setHeader("Content-Type", "image/jpeg")
+    res.attachment('./files/accounts/'+imageName)
+    return res.download('./files/accounts/'+imageName)
   }
 }

@@ -1,20 +1,28 @@
 import {
+  Res,
+  Get,
   Post,
   Body,
   Param,
   HttpCode,
   UseGuards,
   Controller,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common'
 import {
   ApiTags,
   ApiBody,
   ApiParam,
   ApiHeader,
+  ApiConsumes,
   ApiOkResponse,
   ApiCreatedResponse,
 } from '@nestjs/swagger'
+import { extname } from 'path'
+import { diskStorage } from 'multer'
 import { AuthGuard } from '@nestjs/passport'
+import { FileInterceptor } from '@nestjs/platform-express'
 
 import { Thread } from './thread.entity'
 import { User } from '../users/user.entity'
@@ -22,6 +30,7 @@ import { ThreadDto } from './dto/thread.dto'
 import { ThreadsService } from './threads.service'
 import { GetUser } from '../users/get-user.decorator'
 import { ThreadAddMessageDto } from './dto/thread-add-message.dto'
+import { MessageType } from '../messages/message-type.enum';
 
 @ApiTags('Chat')
 @ApiHeader({
@@ -31,6 +40,8 @@ import { ThreadAddMessageDto } from './dto/thread-add-message.dto'
 @Controller('threads')
 @UseGuards(AuthGuard())
 export class ThreadsController {
+  SERVER_URL = 'http://161.35.20.152:3000/'
+
   constructor(private threadService: ThreadsService) {}
 
   @ApiBody({
@@ -51,6 +62,11 @@ export class ThreadsController {
     return this.threadService.getMessages(sender, threadDto)
   }
 
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Image file',
+    type: Object,
+  })
   @ApiParam({
     name: 'id',
     description: 'Thread Id',
@@ -66,11 +82,50 @@ export class ThreadsController {
     type: Thread,
   })
   @Post(':id/messages')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './files/chat',
+
+        filename: (req: any, file: any, cb: any) => {
+          const randomName = Array(32)
+            .fill(null)
+            .map(() => Math.round(Math.random() * 16).toString(16))
+            .join('')
+          return cb(null, `${randomName}${extname(file.originalname)}`)
+        },
+      }),
+    }),
+  )
   addMessage(
     @GetUser() sender: User,
+    @UploadedFile() file: any,
     @Param('id') threadId: number,
     @Body() threadAddMessageDto: ThreadAddMessageDto,
   ): Promise<any> {
+    const { type: messageType } = threadAddMessageDto
+    if (messageType === MessageType.IMAGE) {
+      return this.threadService.saveFile(sender, threadId, threadAddMessageDto, `${this.SERVER_URL}v1/threads/message/file/${file.filename}`)
+    }
+   
     return this.threadService.addMessage(sender, threadId, threadAddMessageDto)
+  }
+
+  @ApiParam({
+    name: "fileName",
+    description: "File name"
+  })
+  @ApiOkResponse({
+    description: 'File'
+  })
+  @Get('message/file/:fileName')
+  async downloadFile(
+    @GetUser() user: User,
+    @Res() res: any,
+    @Param('fileName') fileName: string,
+  ): Promise<any> {
+    res.setHeader("Content-Type", "image/jpeg")
+    res.attachment(`./files/chat/${fileName}`)
+    return res.download(`./files/chat/${fileName}`)
   }
 }
