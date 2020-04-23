@@ -105,7 +105,7 @@ export class ThreadsController {
   ): Promise<any> {
     const { type: messageType } = threadAddMessageDto
     if (messageType === MessageType.IMAGE) {
-      return this.threadService.saveFile(sender, threadId, threadAddMessageDto, `${this.SERVER_URL}v1/threads/message/file/${file.filename}`)
+      return this.threadService.saveFile(sender, threadId, threadAddMessageDto, `${this.SERVER_URL}v1/threads/messages/file/${file.filename}`)
     }
 
     return this.threadService.addMessage(sender, threadId, threadAddMessageDto)
